@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --border: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar: 210 40% 98%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --border: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --sidebar: 222.2 84% 6%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+}
+
+@layer components {
+  /* Prose styles for doc content */
+  .prose-docs {
+    @apply text-foreground;
+  }
+
+  .prose-docs h1 {
+    @apply text-3xl font-bold tracking-tight text-foreground mt-0 mb-4;
+  }
+
+  .prose-docs h2 {
+    @apply text-xl font-semibold tracking-tight text-foreground mt-10 mb-4 pb-2 border-b border-border;
+    scroll-margin-top: 80px;
+  }
+
+  .prose-docs h3 {
+    @apply text-base font-semibold text-foreground mt-8 mb-3;
+    scroll-margin-top: 80px;
+  }
+
+  .prose-docs p {
+    @apply leading-7 text-muted-foreground mb-4;
+  }
+
+  .prose-docs a {
+    @apply text-primary underline underline-offset-4 hover:text-primary/80 transition-colors;
+  }
+
+  .prose-docs code {
+    @apply bg-muted text-foreground font-mono text-sm px-1.5 py-0.5 rounded-md;
+  }
+
+  .prose-docs pre {
+    @apply bg-muted rounded-lg p-4 overflow-x-auto my-6 text-sm font-mono leading-relaxed;
+  }
+
+  .prose-docs pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+
+  .prose-docs ul {
+    @apply list-disc list-outside pl-6 mb-4 space-y-2;
+  }
+
+  .prose-docs ol {
+    @apply list-decimal list-outside pl-6 mb-4 space-y-2;
+  }
+
+  .prose-docs li {
+    @apply text-muted-foreground leading-7;
+  }
+
+  .prose-docs blockquote {
+    @apply border-l-4 border-primary/50 pl-4 italic text-muted-foreground my-6;
+  }
+
+  .prose-docs hr {
+    @apply border-border my-8;
+  }
+
+  .prose-docs table {
+    @apply w-full text-sm border-collapse my-6;
+  }
+
+  .prose-docs thead {
+    @apply border-b border-border;
+  }
+
+  .prose-docs th {
+    @apply text-left font-semibold text-foreground py-3 px-4;
+  }
+
+  .prose-docs td {
+    @apply py-3 px-4 border-b border-border text-muted-foreground;
+  }
+
+  /* Callout / note boxes */
+  .callout {
+    @apply rounded-lg border px-4 py-3 my-6 flex gap-3 items-start text-sm;
+  }
+
+  .callout-info {
+    @apply bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-200;
+  }
+
+  .callout-warning {
+    @apply bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-200;
+  }
+
+  .callout-tip {
+    @apply bg-green-50 border-green-200 text-green-900 dark:bg-green-950/30 dark:border-green-800 dark:text-green-200;
+  }
+}
