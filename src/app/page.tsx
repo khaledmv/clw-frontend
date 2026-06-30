@@ -9,6 +9,19 @@ const PER_PAGE_OPTIONS = ["12", "24", "48", "96"] as const;
 
 // ── Highlight helpers ─────────────────────────────────────────────────────────
 
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function highlight(text: string, query: string) {
   if (!query.trim()) return text;
 
@@ -333,7 +346,7 @@ function DocumentCard({
 
         {doc.description && (
           <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">
-            {highlight(doc.description, searchQuery)}
+            {highlight(stripHtml(doc.description), searchQuery)}
           </p>
         )}
 
