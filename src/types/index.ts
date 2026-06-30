@@ -113,12 +113,12 @@ export interface FilterOptions {
 }
 
 export interface DocumentFilters {
-  document_type_id?: string;
-  brand_id?: string;
-  application_id?: string;
-  solution_id?: string;
-  product_category_id?: string;
-  location_id?: string;
+  document_type?: string;
+  brand?: string;
+  application?: string;
+  solution?: string;
+  product_category?: string;
+  location?: string;
   search?: string;
   per_page?: string;
   page?: string;

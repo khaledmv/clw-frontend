@@ -1,13 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { documentApi, getFilters } from "@/lib/api";
-import type { Document, FilterOptions } from "@/types";
+import type { Document, FilterOptions, TaxonomyItem } from "@/types";
 
 const PER_PAGE_OPTIONS = ["12", "24", "48", "96"] as const;
 
-// ── Highlight helpers ─────────────────────────────────────────────────────────
+const MULTI_KEYS = [
+  "document_type",
+  "brand",
+  "application",
+  "solution",
+  "product_category",
+  "location",
+] as const;
+type MultiKey = (typeof MULTI_KEYS)[number];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function stripHtml(html: string): string {
   return html
@@ -24,18 +35,14 @@ function stripHtml(html: string): string {
 
 function highlight(text: string, query: string) {
   if (!query.trim()) return text;
-
   const words = query
     .trim()
     .split(/\s+/)
     .filter(Boolean)
     .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-
   if (!words.length) return text;
-
   const pattern = new RegExp(`(${words.join("|")})`, "gi");
   const parts = text.split(pattern);
-
   return parts.map((part, i) =>
     i % 2 === 1 ? (
       <mark
@@ -64,35 +71,56 @@ function tagMatches(name: string, query: string): boolean {
 
 interface FilterState {
   search: string;
-  document_type_id: string;
-  brand_id: string;
-  application_id: string;
-  solution_id: string;
-  product_category_id: string;
-  location_id: string;
+  document_type: string[];
+  brand: string[];
+  application: string[];
+  solution: string[];
+  product_category: string[];
+  location: string[];
   per_page: string;
   page: number;
 }
 
-const DEFAULT_FILTERS: FilterState = {
-  search: "",
-  document_type_id: "",
-  brand_id: "",
-  application_id: "",
-  solution_id: "",
-  product_category_id: "",
-  location_id: "",
-  per_page: "12",
-  page: 1,
-};
+// ── Root export — Suspense required for useSearchParams ───────────────────────
+
+export default function Page() {
+  return (
+    <Suspense>
+      <DocumentsPage />
+    </Suspense>
+  );
+}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function DocumentsPage() {
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+function DocumentsPage() {
+  const searchParams = useSearchParams();
+
+  const [filters, setFilters] = useState<FilterState>(() => {
+    const get = (key: string) => {
+      const val = searchParams.get(key);
+      return val ? val.split(" ").filter(Boolean) : [];
+    };
+    return {
+      search: searchParams.get("search") ?? "",
+      document_type: get("document_type"),
+      brand: get("brand"),
+      application: get("application"),
+      solution: get("solution"),
+      product_category: get("product_category"),
+      location: get("location"),
+      per_page: searchParams.get("per_page") ?? "12",
+      page: Number(searchParams.get("page") ?? "1"),
+    };
+  });
+
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [meta, setMeta] = useState<{ current_page: number; last_page: number; total: number } | null>(null);
+  const [meta, setMeta] = useState<{
+    current_page: number;
+    last_page: number;
+    total: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,6 +128,21 @@ export default function DocumentsPage() {
     getFilters().then(setFilterOptions).catch(() => {});
   }, []);
 
+  // Sync filters → URL using history API directly (avoids Next.js re-renders
+  // from router.replace which was preventing the fetch effect from running)
+  useEffect(() => {
+    const params = new URLSearchParams();
+    MULTI_KEYS.forEach((key) => {
+      if (filters[key].length) params.set(key, filters[key].join(" "));
+    });
+    if (filters.search) params.set("search", filters.search);
+    if (filters.page > 1) params.set("page", String(filters.page));
+    if (filters.per_page !== "12") params.set("per_page", filters.per_page);
+    const qs = params.toString();
+    window.history.replaceState({}, "", qs ? `?${qs}` : window.location.pathname);
+  }, [filters]);
+
+  // Fetch documents whenever filters change
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -109,12 +152,9 @@ export default function DocumentsPage() {
       page: String(filters.page),
     };
     if (filters.search) params.search = filters.search;
-    if (filters.document_type_id) params.document_type_id = filters.document_type_id;
-    if (filters.brand_id) params.brand_id = filters.brand_id;
-    if (filters.application_id) params.application_id = filters.application_id;
-    if (filters.solution_id) params.solution_id = filters.solution_id;
-    if (filters.product_category_id) params.product_category_id = filters.product_category_id;
-    if (filters.location_id) params.location_id = filters.location_id;
+    MULTI_KEYS.forEach((key) => {
+      if (filters[key].length) params[key] = filters[key].join(" ");
+    });
 
     documentApi
       .list(params)
@@ -130,25 +170,34 @@ export default function DocumentsPage() {
       .finally(() => setLoading(false));
   }, [filters]);
 
-  const setFilter = (key: keyof Omit<FilterState, "page" | "search">, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
-  };
+  const toggleFilter = useCallback((key: MultiKey, slug: string) => {
+    setFilters((prev) => {
+      const current = prev[key];
+      const next = current.includes(slug)
+        ? current.filter((s) => s !== slug)
+        : [...current, slug];
+      return { ...prev, [key]: next, page: 1 };
+    });
+  }, []);
 
-  const hasActiveFilters =
-    filters.document_type_id ||
-    filters.brand_id ||
-    filters.application_id ||
-    filters.solution_id ||
-    filters.product_category_id ||
-    filters.location_id;
+  const clearAllFilters = useCallback(() => {
+    setFilters((prev) => ({
+      ...prev,
+      ...Object.fromEntries(MULTI_KEYS.map((k) => [k, []])),
+      page: 1,
+    }));
+  }, []);
 
-  const filterGroups = [
-    { key: "document_type_id" as const, label: "Document Type", options: filterOptions?.document_types ?? [] },
-    { key: "brand_id" as const, label: "Brand", options: filterOptions?.brands ?? [] },
-    { key: "application_id" as const, label: "Application", options: filterOptions?.applications ?? [] },
-    { key: "solution_id" as const, label: "Solution", options: filterOptions?.solutions ?? [] },
-    { key: "product_category_id" as const, label: "Product Category", options: filterOptions?.product_categories ?? [] },
-    { key: "location_id" as const, label: "Location", options: filterOptions?.locations ?? [] },
+  const hasActiveFilters = MULTI_KEYS.some((key) => filters[key].length > 0);
+  const totalActive = MULTI_KEYS.reduce((sum, key) => sum + filters[key].length, 0);
+
+  const filterGroups: { key: MultiKey; label: string; options: TaxonomyItem[] }[] = [
+    { key: "document_type", label: "Document Types", options: filterOptions?.document_types ?? [] },
+    { key: "brand", label: "Brands", options: filterOptions?.brands ?? [] },
+    { key: "application", label: "Application", options: filterOptions?.applications ?? [] },
+    { key: "solution", label: "Solutions", options: filterOptions?.solutions ?? [] },
+    { key: "product_category", label: "Product Categories", options: filterOptions?.product_categories ?? [] },
+    { key: "location", label: "Location", options: filterOptions?.locations ?? [] },
   ];
 
   const searchQuery = filters.search;
@@ -170,33 +219,35 @@ export default function DocumentsPage() {
       <div className="flex flex-col gap-8 lg:flex-row">
         {/* ── Filter sidebar ───────────────────────────────────────────────── */}
         <aside className="w-full shrink-0 lg:w-56 xl:w-64">
-          <div className="sticky top-20 space-y-4">
-            {filterGroups.map(({ key, label, options }) => (
-              <div key={key}>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  {label}
-                </label>
-                <select
-                  value={filters[key]}
-                  onChange={(e) => setFilter(key, e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">All</option>
-                  {options.map((opt) => (
-                    <option key={opt.id} value={String(opt.id)}>
-                      {opt.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
+          <div className="sticky top-20">
+            {/* Filter groups accordion */}
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              {filterGroups.map(({ key, label, options }, idx) =>
+                options.length === 0 ? null : (
+                  <FilterGroup
+                    key={key}
+                    label={label}
+                    options={options}
+                    selected={filters[key]}
+                    onToggle={(slug) => toggleFilter(key, slug)}
+                    isLast={idx === filterGroups.filter((g) => g.options.length > 0).length - 1}
+                  />
+                )
+              )}
+            </div>
 
+            {/* Clear filters */}
             {hasActiveFilters && (
               <button
-                onClick={() => setFilters(DEFAULT_FILTERS)}
-                className="text-sm text-muted-foreground underline hover:text-foreground"
+                onClick={clearAllFilters}
+                className="mt-3 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               >
-                Clear all filters
+                Clear Filters
+                {totalActive > 0 && (
+                  <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground">
+                    {totalActive}
+                  </span>
+                )}
               </button>
             )}
           </div>
@@ -206,10 +257,10 @@ export default function DocumentsPage() {
         <div className="min-w-0 flex-1">
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {loading && searchQuery ? (
+              {loading ? (
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Searching…
+                  {searchQuery ? "Searching…" : "Loading…"}
                 </span>
               ) : (
                 toolbarLabel
@@ -295,6 +346,91 @@ export default function DocumentsPage() {
   );
 }
 
+// ── FilterGroup (accordion dropdown) ─────────────────────────────────────────
+
+const SHOW_LIMIT = 6;
+
+function FilterGroup({
+  label,
+  options,
+  selected,
+  onToggle,
+  isLast,
+}: {
+  label: string;
+  options: TaxonomyItem[];
+  selected: string[];
+  onToggle: (slug: string) => void;
+  isLast: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? options : options.slice(0, SHOW_LIMIT);
+
+  return (
+    <div className={!isLast ? "border-b border-border" : undefined}>
+      {/* Header row */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-accent/50"
+        aria-expanded={open}
+      >
+        <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+          {label}
+          {selected.length > 0 && (
+            <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground">
+              {selected.length}
+            </span>
+          )}
+        </span>
+        <span className="text-lg leading-none text-muted-foreground select-none">
+          {open ? "−" : "+"}
+        </span>
+      </button>
+
+      {/* Options */}
+      {open && (
+        <div className="border-t border-border/50 bg-muted/30 px-4 pb-3 pt-2">
+          <div className="space-y-0.5">
+            {visible.map((opt) => {
+              const checked = selected.includes(opt.slug);
+              return (
+                <label
+                  key={opt.id}
+                  className="flex cursor-pointer items-center gap-2.5 rounded px-1 py-1.5 hover:bg-accent"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onToggle(opt.slug)}
+                    className="h-3.5 w-3.5 shrink-0 rounded border-input accent-primary"
+                  />
+                  <span
+                    className={`truncate text-sm leading-tight ${
+                      checked ? "font-medium text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    {opt.name}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          {options.length > SHOW_LIMIT && (
+            <button
+              onClick={() => setShowAll((v) => !v)}
+              className="mt-1.5 pl-1 text-xs text-primary hover:underline"
+            >
+              {showAll ? "Show less" : `+${options.length - SHOW_LIMIT} more`}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── DocumentCard ──────────────────────────────────────────────────────────────
 
 function DocumentCard({
@@ -336,7 +472,6 @@ function DocumentCard({
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        {/* Link updated: /documents/slug → /slug */}
         <Link
           href={`/${doc.slug}`}
           className="mb-1 line-clamp-2 text-sm font-semibold leading-snug hover:text-primary"

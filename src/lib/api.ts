@@ -7,7 +7,6 @@ import type {
   User,
   Document,
   FilterOptions,
-  DocumentFilters,
 } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -145,10 +144,10 @@ export const categories = createResource<Category>("/categories");
 // ── Documents ─────────────────────────────────────────────────────────────────
 
 export const documentApi = {
-  list: (params?: DocumentFilters) => {
+  list: (params?: Record<string, string>) => {
     const clean = Object.fromEntries(
       Object.entries(params ?? {}).filter(([, v]) => v !== undefined && v !== "")
-    ) as Record<string, string>;
+    );
     const query = Object.keys(clean).length
       ? "?" + new URLSearchParams(clean).toString()
       : "";
