@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
-import { Search, Github, Menu } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { SearchDialog } from "./SearchDialog";
 import { cn } from "@/lib/utils";
@@ -43,7 +43,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
           )}
 
           {/* Logo */}
-          <Link href="/docs" className="flex items-center gap-2 mr-4">
+          <Link href="/" className="flex items-center gap-2 mr-4">
             <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-sm">
               C
             </div>
@@ -61,7 +61,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
             )}
           >
             <Search className="size-4 shrink-0" />
-            <span className="flex-1 text-left">Search docs...</span>
+            <span className="flex-1 text-left">Search documents…</span>
             <kbd className="hidden sm:flex items-center gap-0.5 text-xs border border-border rounded px-1.5 py-0.5 bg-background">
               <span className="text-[10px]">⌘</span>K
             </kbd>
@@ -69,15 +69,6 @@ export function Header({ onMenuToggle }: HeaderProps) {
 
           {/* Right actions */}
           <div className="ml-auto flex items-center gap-1">
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-              aria-label="GitHub"
-            >
-              <Github className="size-4" />
-            </a>
             <ThemeToggle />
           </div>
         </div>

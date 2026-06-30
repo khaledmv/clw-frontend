@@ -85,6 +85,11 @@
     @apply leading-7 text-muted-foreground mb-4;
   }
 
+  /* Suppress the empty <p><br></p> spacer lines that WYSIWYG editors emit */
+  .prose-docs p:has(> br:only-child) {
+    @apply mb-1;
+  }
+
   .prose-docs a {
     @apply text-primary underline underline-offset-4 hover:text-primary/80 transition-colors;
   }

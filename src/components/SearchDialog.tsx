@@ -3,14 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, ArrowRight, FileText } from "lucide-react";
-import { allNavItems } from "@/lib/navigation";
+import { documentApi } from "@/lib/api";
+import type { Document } from "@/types";
 import { cn } from "@/lib/utils";
-
-interface SearchItem {
-  title: string;
-  href: string;
-  section: string;
-}
 
 interface SearchDialogProps {
   open: boolean;
@@ -19,22 +14,40 @@ interface SearchDialogProps {
 
 export function SearchDialog({ open, onClose }: SearchDialogProps) {
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const results: SearchItem[] = query.trim()
-    ? allNavItems.filter((item) =>
-        item.title.toLowerCase().includes(query.toLowerCase()) ||
-        item.section.toLowerCase().includes(query.toLowerCase())
-      )
-    : allNavItems.slice(0, 8);
+  // Debounce query → Meilisearch via /api/v1/documents?search=
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const timer = setTimeout(() => {
+      documentApi
+        .list({ search: query, per_page: "8" })
+        .then((res) => setResults(res.data))
+        .catch(() => setResults([]))
+        .finally(() => setLoading(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [results]);
 
   const navigate = useCallback(
-    (href: string) => {
-      router.push(href);
+    (slug: string) => {
+      router.push(`/${slug}`);
       onClose();
       setQuery("");
+      setResults([]);
       setActiveIndex(0);
     },
     [router, onClose]
@@ -45,13 +58,10 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
       setTimeout(() => inputRef.current?.focus(), 50);
     } else {
       setQuery("");
+      setResults([]);
       setActiveIndex(0);
     }
   }, [open]);
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [query]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -65,7 +75,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
         e.preventDefault();
         setActiveIndex((i) => Math.max(i - 1, 0));
       } else if (e.key === "Enter" && results[activeIndex]) {
-        navigate(results[activeIndex].href);
+        navigate(results[activeIndex].slug);
       }
     };
     document.addEventListener("keydown", handleKey);
@@ -80,25 +90,28 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
       onClick={onClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-fade-in" />
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
 
       {/* Dialog */}
       <div
         className={cn(
-          "relative w-full max-w-lg mx-4 bg-background border border-border",
-          "rounded-xl shadow-2xl overflow-hidden animate-fade-in"
+          "relative mx-4 w-full max-w-lg overflow-hidden rounded-xl border border-border bg-background shadow-2xl"
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Input */}
-        <div className="flex items-center gap-3 px-4 border-b border-border">
-          <Search className="size-4 text-muted-foreground shrink-0" />
+        {/* Input row */}
+        <div className="flex items-center gap-3 border-b border-border px-4">
+          {loading ? (
+            <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+          ) : (
+            <Search className="size-4 shrink-0 text-muted-foreground" />
+          )}
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search documentation..."
-            className="flex-1 py-4 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            placeholder="Search documents…"
+            className="flex-1 bg-transparent py-4 text-sm outline-none placeholder:text-muted-foreground"
           />
           {query && (
             <button
@@ -108,40 +121,48 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
               <X className="size-4" />
             </button>
           )}
-          <kbd className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground border border-border rounded px-1.5 py-0.5">
+          <kbd className="hidden items-center gap-1 rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground sm:flex">
             Esc
           </kbd>
         </div>
 
         {/* Results */}
         <ul className="max-h-80 overflow-y-auto py-2">
-          {results.length === 0 ? (
+          {!query.trim() ? (
+            <li className="px-4 py-8 text-center text-sm text-muted-foreground">
+              Type to search documents…
+            </li>
+          ) : loading ? (
+            <li className="px-4 py-8 text-center text-sm text-muted-foreground">
+              Searching…
+            </li>
+          ) : results.length === 0 ? (
             <li className="px-4 py-8 text-center text-sm text-muted-foreground">
               No results for &ldquo;{query}&rdquo;
             </li>
           ) : (
-            results.map((item, i) => (
-              <li key={item.href}>
+            results.map((doc, i) => (
+              <li key={doc.slug}>
                 <button
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 text-left text-sm transition-colors",
-                    i === activeIndex
-                      ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent/50"
+                    "flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors",
+                    i === activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"
                   )}
                   onMouseEnter={() => setActiveIndex(i)}
-                  onClick={() => navigate(item.href)}
+                  onClick={() => navigate(doc.slug)}
                 >
-                  <FileText className="size-4 text-muted-foreground shrink-0" />
-                  <span className="flex-1 min-w-0">
-                    <span className="block font-medium text-foreground truncate">
-                      {item.title}
+                  <FileText className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-foreground">
+                      {doc.title}
                     </span>
-                    <span className="block text-xs text-muted-foreground">
-                      {item.section}
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {[doc.document_type?.name, doc.brand?.name]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </span>
-                  <ArrowRight className="size-4 text-muted-foreground shrink-0" />
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
                 </button>
               </li>
             ))
@@ -149,15 +170,15 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
         </ul>
 
         {/* Footer */}
-        <div className="flex items-center gap-4 px-4 py-3 border-t border-border text-xs text-muted-foreground">
+        <div className="flex items-center gap-4 border-t border-border px-4 py-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <kbd className="border border-border rounded px-1">↑↓</kbd> navigate
+            <kbd className="rounded border border-border px-1">↑↓</kbd> navigate
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="border border-border rounded px-1">↵</kbd> open
+            <kbd className="rounded border border-border px-1">↵</kbd> open
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="border border-border rounded px-1">Esc</kbd> close
+            <kbd className="rounded border border-border px-1">Esc</kbd> close
           </span>
         </div>
       </div>
