@@ -77,19 +77,11 @@ const DEFAULT_FILTERS: FilterState = {
 
 export default function DocumentsPage() {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
-  const [searchInput, setSearchInput] = useState("");
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [meta, setMeta] = useState<{ current_page: number; last_page: number; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilters((prev) => ({ ...prev, search: searchInput, page: 1 }));
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
 
   useEffect(() => {
     getFilters().then(setFilterOptions).catch(() => {});
@@ -135,8 +127,7 @@ export default function DocumentsPage() {
     filters.application_id ||
     filters.solution_id ||
     filters.product_category_id ||
-    filters.location_id ||
-    filters.search;
+    filters.location_id;
 
   const filterGroups = [
     { key: "document_type_id" as const, label: "Document Type", options: filterOptions?.document_types ?? [] },
@@ -167,29 +158,6 @@ export default function DocumentsPage() {
         {/* ── Filter sidebar ───────────────────────────────────────────────── */}
         <aside className="w-full shrink-0 lg:w-56 xl:w-64">
           <div className="sticky top-20 space-y-4">
-            <div className="relative">
-              <svg
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                type="search"
-                placeholder="Search documents…"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-
             {filterGroups.map(({ key, label, options }) => (
               <div key={key}>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
@@ -212,10 +180,7 @@ export default function DocumentsPage() {
 
             {hasActiveFilters && (
               <button
-                onClick={() => {
-                  setSearchInput("");
-                  setFilters(DEFAULT_FILTERS);
-                }}
+                onClick={() => setFilters(DEFAULT_FILTERS)}
                 className="text-sm text-muted-foreground underline hover:text-foreground"
               >
                 Clear all filters

@@ -46,7 +46,7 @@ export function TableOfContents({ headings }: TableOfContentsProps) {
   return (
     <div className="sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto py-6 pl-4">
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        On This Page
+        On this page
       </p>
       <ul className="space-y-1 text-sm">
         {headings.map((heading) => (
