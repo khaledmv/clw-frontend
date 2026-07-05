@@ -485,28 +485,32 @@ function DocumentCard({
           </p>
         )}
 
-        {visibleTags.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1">
-            {visibleTags.map((tag, i) => {
-              const matched = isSearching && tagMatches(tag.name, searchQuery);
-              return (
-                <span
-                  key={tag.slug ?? tag.name ?? String(i)}
-                  className={
-                    matched
-                      ? "rounded bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-800 ring-1 ring-yellow-300 dark:bg-yellow-900/40 dark:text-yellow-200 dark:ring-yellow-700/60"
-                      : "rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
-                  }
-                >
-                  {highlight(tag.name, searchQuery)}
+          {/* {visibleTags.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-1">
+              {visibleTags.map((tag, i) => {
+                const matched = isSearching && tagMatches(tag, searchQuery);
+
+                return (
+                  <span
+                    key={`${tag}-${i}`}
+                    className={
+                      matched
+                        ? "rounded bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-800 ring-1 ring-yellow-300 dark:bg-yellow-900/40 dark:text-yellow-200 dark:ring-yellow-700/60"
+                        : "rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
+                    }
+                  >
+                    {highlight(tag, searchQuery)}
+                  </span>
+                );
+              })}
+
+              {hiddenCount > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  +{hiddenCount}
                 </span>
-              );
-            })}
-            {hiddenCount > 0 && (
-              <span className="text-xs text-muted-foreground">+{hiddenCount}</span>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )} */}
 
         <div className="mt-auto flex items-center justify-between">
           {doc.file_size_human && (

@@ -182,6 +182,25 @@ export default function DocumentDetailPage() {
                 </table>
               </div>
             )}
+            {doc.all_tags?.length > 0 && (
+              <div>
+                <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+                  Tags
+                </h3>
+
+                <div className="flex flex-wrap gap-2">
+                  {doc.all_tags.map((tag, index) => (
+                    <span
+                      key={`${tag}-${index}`}
+                      className="rounded-full bg-secondary px-2.5 py-1 text-sm text-secondary-foreground"
+                    >
+                      {tag}
+                      {index < doc.all_tags.length - 1 && ","}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
         </div>
