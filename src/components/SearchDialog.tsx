@@ -12,6 +12,19 @@ interface SearchDialogProps {
   onClose: () => void;
 }
 
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function SearchDialog({ open, onClose }: SearchDialogProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Document[]>([]);
@@ -84,6 +97,54 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
 
   if (!open) return null;
 
+  // Highlighted texts
+
+  //   const highlightText = (text: string, query: string) => {
+  //   if (!query.trim()) return text;
+
+  //   const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  //   const regex = new RegExp(`(${escapedQuery})`, "gi");
+
+  //   return text.split(regex).map((part, index) =>
+  //     regex.test(part) ? (
+  //       <mark
+  //         key={index}
+  //         className="rounded bg-yellow-200 px-0.5 text-black dark:bg-yellow-500 dark:text-black"
+  //       >
+  //         {part}
+  //       </mark>
+  //     ) : (
+  //       part
+  //     )
+  //   );
+  // };
+
+
+  const highlightText = (
+  text: string | null | undefined,
+  query: string
+) => {
+  text = text ?? "";
+
+  if (!query.trim()) return text;
+
+  const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escapedQuery})`, "gi");
+
+  return text.split(regex).map((part, index) =>
+    regex.test(part) ? (
+      <mark
+        key={index}
+        className="rounded bg-yellow-200 px-0.5 text-black dark:bg-yellow-500 dark:text-black"
+      >
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+};
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24"
@@ -154,8 +215,26 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                   <FileText className="size-4 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium text-foreground">
-                      {doc.title}
+                      {highlightText(doc.title, query)}
                     </span>
+
+                      <span className="block truncate text-xs text-muted-foreground">
+                         {highlightText(stripHtml(doc.description ?? ""), query)}
+                      </span>
+
+                     {doc.all_tags?.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {doc.all_tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="rounded bg-muted px-2 py-0.5 text-[10px]"
+                          >
+                            {highlightText(tag, query)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     <span className="block truncate text-xs text-muted-foreground">
                       {[doc.document_type?.name, doc.brand?.name]
                         .filter(Boolean)

@@ -100,7 +100,7 @@ export interface Document {
   solution: TaxonomyItem | null;
   product_category: TaxonomyItem | null;
   location: TaxonomyItem | null;
-  all_tags: TaxonomyItem[];
+  all_tags: string[];
 }
 
 export interface FilterOptions {

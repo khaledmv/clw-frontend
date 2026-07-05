@@ -30,7 +30,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-14 items-center gap-4 px-4">
+        <div className="flex mx-auto max-w-screen-xl h-14 items-center gap-4 px-4">
           {/* Mobile menu button */}
           {onMenuToggle && (
             <button
@@ -48,7 +48,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
               C
             </div>
             <span className="font-semibold text-foreground hidden sm:block">
-              CLW Docs
+              CLW-DOCS
             </span>
           </Link>
 

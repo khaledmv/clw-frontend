@@ -127,9 +127,9 @@ export default function DocumentDetailPage() {
           </Link>
 
           <div className="space-y-6">
-            {doc.document_type && (
+            {/* {doc.document_type && (
               <span className="text-sm font-medium text-primary">{doc.document_type.name}</span>
-            )}
+            )} */}
 
             <h1 className="text-3xl font-bold tracking-tight">{doc.title}</h1>
 
@@ -158,7 +158,7 @@ export default function DocumentDetailPage() {
               Download{doc.file_size_human ? ` (${doc.file_size_human})` : ""}
             </a>
 
-            {doc.thumbnail_url && (
+            {/* {doc.thumbnail_url && (
               <div className="overflow-hidden rounded-lg border border-border">
                 <img
                   src={doc.thumbnail_url}
@@ -166,7 +166,7 @@ export default function DocumentDetailPage() {
                   className="max-h-96 w-full object-cover"
                 />
               </div>
-            )}
+            )} */}
 
             {metaRows.length > 0 && (
               <div className="overflow-hidden rounded-lg border border-border">
@@ -183,21 +183,6 @@ export default function DocumentDetailPage() {
               </div>
             )}
 
-            {doc.all_tags.length > 0 && (
-              <div>
-                <h3 className="mb-2 text-sm font-medium text-muted-foreground">Tags</h3>
-                <div className="flex flex-wrap gap-2">
-                  {doc.all_tags.map((tag, i) => (
-                    <span
-                      key={tag.slug ?? tag.name ?? String(i)}
-                      className="rounded-full bg-secondary px-2.5 py-1 text-sm text-secondary-foreground"
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
