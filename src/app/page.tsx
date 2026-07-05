@@ -210,10 +210,12 @@ function DocumentsPage() {
   })();
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
-        <p className="mt-1 text-muted-foreground">Browse and download technical documents</p>
+    <div className="mx-auto max-w-screen-xl px-4 py-8 mb-10">
+      <div className="mx-auto mb-8 text-center py-10 ">
+        <h1 className="text-3xl font-bold  tracking-tight">Document Library</h1>
+        <p className="mx-auto mt-1 text-center text-muted-foreground max-w-4xl">Brochures, Case Studies, Data Sheets and more.
+Filter by Application, Solution, Product Category, Brand, Document Type or Location. 
+Don't see what you're looking for? Contact us and we'll provide it within 24 hours. Email: marketing@cleanwater1.com.</p>
       </div>
 
       <div className="flex flex-col gap-8 lg:flex-row">
