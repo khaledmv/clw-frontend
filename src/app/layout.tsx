@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -31,9 +32,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable}`}>
         <Providers>
-          <div className="min-h-screen bg-background">
+          <div className="flex min-h-screen flex-col bg-background">
             <Header />
-            {children}
+            <div className="flex-1">{children}</div>
+            <Footer />
           </div>
         </Providers>
       </body>
