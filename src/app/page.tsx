@@ -97,10 +97,15 @@ function DocumentsPage() {
   const searchParams = useSearchParams();
 
   const [filters, setFilters] = useState<FilterState>(() => {
+    // const get = (key: string) => {
+    //   const val = searchParams.get(key);
+    //   return val ? val.split(" ").filter(Boolean) : [];
+    // };
+
     const get = (key: string) => {
-      const val = searchParams.get(key);
-      return val ? val.split(" ").filter(Boolean) : [];
-    };
+    const val = searchParams.get(key);
+    return val ? val.split(",").map(v => v.trim()).filter(Boolean) : [];
+  };
     return {
       search: searchParams.get("search") ?? "",
       document_type: get("document_type"),
@@ -133,7 +138,7 @@ function DocumentsPage() {
   useEffect(() => {
     const params = new URLSearchParams();
     MULTI_KEYS.forEach((key) => {
-      if (filters[key].length) params.set(key, filters[key].join(" "));
+      if (filters[key].length) params.set(key, filters[key].join(","));
     });
     if (filters.search) params.set("search", filters.search);
     if (filters.page > 1) params.set("page", String(filters.page));
@@ -153,7 +158,7 @@ function DocumentsPage() {
     };
     if (filters.search) params.search = filters.search;
     MULTI_KEYS.forEach((key) => {
-      if (filters[key].length) params[key] = filters[key].join(" ");
+      if (filters[key].length) params[key] = filters[key].join(",");
     });
 
     documentApi
