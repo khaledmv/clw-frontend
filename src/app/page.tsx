@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { documentApi, getFilters } from "@/lib/api";
+import { stripHtml } from "@/lib/content";
 import type { Document, FilterOptions, TaxonomyItem } from "@/types";
 
 const PER_PAGE_OPTIONS = ["12", "24", "48", "96"] as const;
@@ -19,19 +20,6 @@ const MULTI_KEYS = [
 type MultiKey = (typeof MULTI_KEYS)[number];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function stripHtml(html: string): string {
-  return html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 function highlight(text: string, query: string) {
   if (!query.trim()) return text;
@@ -300,10 +288,7 @@ Don't see what you're looking for? Contact us and we'll provide it within 24 hou
           {loading && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-60 animate-pulse rounded-lg border border-border bg-muted"
-                />
+                <DocumentCardSkeleton key={i} />
               ))}
             </div>
           )}
@@ -438,6 +423,27 @@ function FilterGroup({
   );
 }
 
+// ── DocumentCardSkeleton ──────────────────────────────────────────────────────
+
+function DocumentCardSkeleton() {
+  return (
+    <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
+      <div className="h-36 animate-pulse bg-muted" />
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="h-4 w-4/5 animate-pulse rounded bg-muted" />
+        <div className="space-y-1.5">
+          <div className="h-3 w-full animate-pulse rounded bg-muted" />
+          <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="mt-auto flex items-center justify-between pt-1">
+          <div className="h-3 w-10 animate-pulse rounded bg-muted" />
+          <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── DocumentCard ──────────────────────────────────────────────────────────────
 
 function DocumentCard({
@@ -471,9 +477,9 @@ function DocumentCard({
             />
           </svg>
         )}
-        {doc.document_type && (
+        {doc.document_types[0] && (
           <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
-            {highlight(doc.document_type.name, searchQuery)}
+            {highlight(doc.document_types[0].name, searchQuery)}
           </span>
         )}
       </div>
@@ -492,32 +498,6 @@ function DocumentCard({
           </p>
         )}
 
-          {/* {visibleTags.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-1">
-              {visibleTags.map((tag, i) => {
-                const matched = isSearching && tagMatches(tag, searchQuery);
-
-                return (
-                  <span
-                    key={`${tag}-${i}`}
-                    className={
-                      matched
-                        ? "rounded bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-800 ring-1 ring-yellow-300 dark:bg-yellow-900/40 dark:text-yellow-200 dark:ring-yellow-700/60"
-                        : "rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
-                    }
-                  >
-                    {highlight(tag, searchQuery)}
-                  </span>
-                );
-              })}
-
-              {hiddenCount > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  +{hiddenCount}
-                </span>
-              )}
-            </div>
-          )} */}
 
         <div className="mt-auto flex items-center justify-between">
           {doc.file_size_human && (

@@ -232,7 +232,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                           ))}
 
                     <span className="block truncate text-xs text-muted-foreground">
-                      {[doc.document_type?.name, doc.brand?.name]
+                      {[doc.document_types[0]?.name, doc.brands[0]?.name]
                         .filter(Boolean)
                         .join(" · ")}
                     </span>

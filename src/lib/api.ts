@@ -153,7 +153,8 @@ export const documentApi = {
       : "";
     return apiFetch<PaginatedResponse<Document>>(`/v1/documents${query}`);
   },
-  get: (slug: string) => apiFetch<ApiResponse<Document>>(`/v1/documents/${slug}`),
+  get: (slug: string, options?: RequestInit) =>
+    apiFetch<ApiResponse<Document>>(`/v1/documents/${slug}`, options),
 };
 
 export const getFilters = () => apiFetch<FilterOptions>("/v1/filters");

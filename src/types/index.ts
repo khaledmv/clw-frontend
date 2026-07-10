@@ -86,6 +86,8 @@ export interface Document {
   id: number;
   title: string;
   slug: string;
+  meta_title?: string | null;
+  meta_description?: string | null;
   description: string | null;
   search_snippet?: string | null;
   file_url: string;
@@ -95,12 +97,12 @@ export interface Document {
   is_published: boolean;
   published_at: string | null;
   created_at: string;
-  document_type: TaxonomyItem | null;
-  brand: TaxonomyItem | null;
-  application: TaxonomyItem | null;
-  solution: TaxonomyItem | null;
-  product_category: TaxonomyItem | null;
-  location: TaxonomyItem | null;
+  document_types: TaxonomyItem[];
+  brands: TaxonomyItem[];
+  applications: TaxonomyItem[];
+  solutions: TaxonomyItem[];
+  product_categories: TaxonomyItem[];
+  locations: TaxonomyItem[];
   all_tags: string[];
 }
 
