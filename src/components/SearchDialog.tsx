@@ -51,10 +51,12 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
     return () => clearTimeout(timer);
   }, [query]);
 
+  //
   useEffect(() => {
     setActiveIndex(0);
   }, [results]);
 
+  // Navigate to document page and reset state
   const navigate = useCallback(
     (slug: string) => {
       router.push(`/${slug}`);
@@ -66,6 +68,13 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
     [router, onClose]
   );
 
+  // Format tag for display (capitalize first letter of each word)
+  const formatTag = (tag: string) =>
+  tag
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+ // Focus input when dialog opens, reset state when it closes
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 50);
@@ -75,7 +84,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
       setActiveIndex(0);
     }
   }, [open]);
-
+ // Handle keyboard navigation and selection
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (!open) return;
@@ -97,29 +106,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
 
   if (!open) return null;
 
-  // Highlighted texts
-
-  //   const highlightText = (text: string, query: string) => {
-  //   if (!query.trim()) return text;
-
-  //   const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  //   const regex = new RegExp(`(${escapedQuery})`, "gi");
-
-  //   return text.split(regex).map((part, index) =>
-  //     regex.test(part) ? (
-  //       <mark
-  //         key={index}
-  //         className="rounded bg-yellow-200 px-0.5 text-black dark:bg-yellow-500 dark:text-black"
-  //       >
-  //         {part}
-  //       </mark>
-  //     ) : (
-  //       part
-  //     )
-  //   );
-  // };
-
-
+   
   const highlightText = (
   text: string | null | undefined,
   query: string
@@ -218,22 +205,31 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                       {highlightText(doc.title, query)}
                     </span>
 
-                      <span className="block truncate text-xs text-muted-foreground">
-                         {highlightText(stripHtml(doc.description ?? ""), query)}
-                      </span>
+                     {doc.search_snippet ? (
+                            <div
+                              className="mt-1 text-xs text-muted-foreground line-clamp-2 [&_mark]:rounded [&_mark]:bg-yellow-200 [&_mark]:px-0.5 [&_mark]:text-black dark:[&_mark]:bg-yellow-500"
+                              dangerouslySetInnerHTML={{
+                                __html: doc.search_snippet,
+                              }}
+                            />
+                          ) : (
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {stripHtml(doc.description ?? "")}
+                            </span>
+                      )}
 
-                     {/* {doc.all_tags?.length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {doc.all_tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="rounded bg-muted px-2 py-0.5 text-[10px]"
-                          >
-                            {highlightText(tag, query)}
-                          </span>
-                        ))}
-                      </div>
-                    )} */}
+                      {doc.all_tags
+                          .filter(tag =>
+                            tag.toLowerCase().includes(query.toLowerCase())
+                          )
+                          .map((tag, index) => (
+                            <span
+                              key={index}
+                              className="rounded bg-muted px-2 py-0.5 text-[10px]"
+                            >
+                              {highlightText(formatTag(tag), query)}
+                            </span>
+                          ))}
 
                     <span className="block truncate text-xs text-muted-foreground">
                       {[doc.document_type?.name, doc.brand?.name]

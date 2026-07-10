@@ -87,6 +87,7 @@ export interface Document {
   title: string;
   slug: string;
   description: string | null;
+  search_snippet?: string | null;
   file_url: string;
   file_name: string;
   file_size_human: string | null;
