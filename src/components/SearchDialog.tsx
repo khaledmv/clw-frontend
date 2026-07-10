@@ -222,7 +222,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                          {highlightText(stripHtml(doc.description ?? ""), query)}
                       </span>
 
-                     {doc.all_tags?.length > 0 && (
+                     {/* {doc.all_tags?.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
                         {doc.all_tags.map((tag, index) => (
                           <span
@@ -233,7 +233,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                           </span>
                         ))}
                       </div>
-                    )}
+                    )} */}
 
                     <span className="block truncate text-xs text-muted-foreground">
                       {[doc.document_type?.name, doc.brand?.name]
