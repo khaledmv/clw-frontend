@@ -9,16 +9,35 @@ import type { Document } from "@/types";
 // Revalidate the cached page in the background at most once an hour so
 // crawlers and users get an instantly-served, pre-rendered document while
 // edits made in the CMS still show up without a full redeploy.
-export const revalidate = 3600;
+// export const revalidate = 3600;
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+// async function getDocument(slug: string): Promise<Document> {
+//   try {
+//     const res = await documentApi.get(slug, { next: { revalidate } });
+//     return res.data;
+//   } catch (err) {
+//     if (err instanceof ApiRequestError && err.status === 404) {
+//       notFound();
+//     }
+//     throw err;
+//   }
+// }
 
 async function getDocument(slug: string): Promise<Document> {
   try {
-    const res = await documentApi.get(slug, { next: { revalidate } });
+    const res = await documentApi.get(slug, {
+      cache: "no-store",
+    });
+
     return res.data;
   } catch (err) {
     if (err instanceof ApiRequestError && err.status === 404) {
       notFound();
     }
+
     throw err;
   }
 }

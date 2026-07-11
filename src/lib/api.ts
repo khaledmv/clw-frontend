@@ -30,7 +30,17 @@ async function apiFetch<T>(
 ): Promise<T> {
   const token = getToken();
 
-  const res = await fetch(`${API_BASE}/api${path}`, {
+  // const res = await fetch(`${API_BASE}/api${path}`, {
+  //   ...options,
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //     Accept: "application/json",
+  //     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  //     ...options.headers,
+  //   },
+  // });
+
+    const res = await fetch(`${API_BASE}/api${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -38,6 +48,8 @@ async function apiFetch<T>(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
+    cache: options.cache,
+    next: options.next,
   });
 
   if (!res.ok) {
