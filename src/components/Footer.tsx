@@ -34,7 +34,7 @@ export function Footer() {
               <span className="font-semibold text-foreground">CLW-DOCS</span>
             </Link>
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-              cleanwater1 is a leading provider of water quality solutions and the
+              Cleanwater1 is a leading provider of water quality solutions and the
               only to offer a complete set of end-to-end water quality and
               wastewater treatment products and solutions.
             </p>
