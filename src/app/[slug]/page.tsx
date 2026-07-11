@@ -129,7 +129,8 @@ export default async function DocumentDetailPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="flex gap-20 xl:gap-14">
+      {/* <div className="flex gap-20 xl:gap-14"> */}
+      <div className={`flex ${ headings.length > 0 ? "gap-20 xl:gap-14" : "justify-center" }`}>
 
         {/* ── Left TOC sidebar (xl+ only) ───────────────────────────────── */}
         {headings.length > 0 && (
@@ -139,7 +140,7 @@ export default async function DocumentDetailPage({
         )}
 
         {/* ── Main content ──────────────────────────────────────────────── */}
-        <div className="min-w-0 max-w-3xl flex-1">
+        <div className={`min-w-0 ${ headings.length > 0  ? "max-w-3xl flex-1"  : "w-full max-w-4xl" }`}>
           <Link
             href="/"
             className="mb-8 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
